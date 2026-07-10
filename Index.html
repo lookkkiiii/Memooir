@@ -1,0 +1,2336 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Memoir — Kapsul Waktu Digital</title>
+
+    <!-- ============================================================== -->
+    <!--                            FONTS                                -->
+    <!-- ============================================================== -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet" />
+
+    <style>
+        /* ============================================================== */
+        /*                    RESET & BASE STYLES                         */
+        /* ============================================================== */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --color-bg: #0b0b0b;
+            --color-surface: #161616;
+            --color-surface-elevated: #212121;
+            --color-border: #2e2e2e;
+            --color-text-primary: #f0f0f0;
+            --color-text-secondary: #a8a8a8;
+            --color-text-muted: #6b6b6b;
+            --color-accent: #d4d4d4;
+            --color-accent-subtle: #3a3a3a;
+            --color-shadow: rgba(0, 0, 0, 0.7);
+            --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-serif: "Playfair Display", Georgia, "Times New Roman", serif;
+            --transition-smooth: 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+            --transition-soft: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            --transition-bounce: 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+            --radius-card: 16px;
+            --radius-object: 12px;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background: var(--color-bg);
+            color: var(--color-text-primary);
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ============================================================== */
+        /*                   SCROLLBAR STYLING                           */
+        /* ============================================================== */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--color-bg);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--color-border);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--color-text-muted);
+        }
+
+        /* ============================================================== */
+        /*                   UTILITY CLASSES                             */
+        /* ============================================================== */
+        .hidden {
+            display: none !important;
+        }
+        .invisible {
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+
+        /* ============================================================== */
+        /*                APP CONTAINER / DESK VIEW                      */
+        /* ============================================================== */
+        #app {
+            position: relative;
+            min-height: 100vh;
+            width: 100%;
+            background: var(--color-bg);
+            overflow: hidden;
+        }
+
+        /* --- Desk Surface --- */
+        #desk-view {
+            position: relative;
+            min-height: 100vh;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1.5rem;
+            background: radial-gradient(ellipse at 50% 80%, #141414 0%, #0a0a0a 70%);
+            transition: opacity var(--transition-smooth), transform var(--transition-smooth);
+            will-change: transform, opacity;
+        }
+
+        /* subtle desk texture overlay */
+        #desk-view::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.012) 0%, transparent 60%),
+                radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.008) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* subtle grain */
+        #desk-view::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none;
+            opacity: 0.3;
+            z-index: 0;
+        }
+
+        /* --- Desk Title --- */
+        .desk-title {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            margin-bottom: 2.5rem;
+            user-select: none;
+        }
+
+        .desk-title h1 {
+            font-family: var(--font-serif);
+            font-weight: 300;
+            font-size: clamp(2rem, 6vw, 3.8rem);
+            letter-spacing: 0.18em;
+            color: var(--color-text-primary);
+            text-transform: uppercase;
+            opacity: 0.7;
+            margin-bottom: 0.25rem;
+        }
+
+        .desk-title .sub {
+            font-size: clamp(0.7rem, 1.2vw, 0.85rem);
+            letter-spacing: 0.3em;
+            color: var(--color-text-muted);
+            font-weight: 300;
+            text-transform: uppercase;
+            opacity: 0.5;
+        }
+
+        /* --- Objects Grid --- */
+        .desk-objects {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            max-width: 720px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* each object card */
+        .object-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.4rem 0.8rem 1rem;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-object);
+            cursor: pointer;
+            transition: all var(--transition-soft);
+            position: relative;
+            user-select: none;
+            aspect-ratio: 1 / 1.1;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .object-card:hover {
+            transform: translateY(-4px) scale(1.02);
+            border-color: #444;
+            background: var(--color-surface-elevated);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        .object-card:active {
+            transform: scale(0.96);
+            transition-duration: 0.1s;
+        }
+
+        /* visited state — subtle indicator */
+        .object-card.visited {
+            border-color: #3a3a3a;
+            opacity: 0.8;
+        }
+        .object-card.visited .object-icon {
+            filter: grayscale(0.2);
+        }
+
+        /* --- Object Icon & Label --- */
+        .object-icon {
+            font-size: clamp(2.4rem, 5vw, 3.6rem);
+            margin-bottom: 0.5rem;
+            transition: all var(--transition-soft);
+            filter: grayscale(0.4);
+            line-height: 1;
+        }
+
+        .object-card:hover .object-icon {
+            filter: grayscale(0);
+            transform: scale(1.05);
+        }
+
+        .object-label {
+            font-size: clamp(0.6rem, 1.1vw, 0.75rem);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--color-text-secondary);
+            font-weight: 400;
+            transition: color var(--transition-soft);
+            text-align: center;
+        }
+
+        .object-card:hover .object-label {
+            color: var(--color-text-primary);
+        }
+
+        /* small badge for visited */
+        .object-card .visit-badge {
+            position: absolute;
+            top: 6px;
+            right: 8px;
+            font-size: 0.55rem;
+            letter-spacing: 0.05em;
+            color: var(--color-text-muted);
+            opacity: 0;
+            transition: opacity var(--transition-soft);
+        }
+        .object-card.visited .visit-badge {
+            opacity: 1;
+        }
+
+        /* --- Secret lock state --- */
+        .object-card.secret-locked .object-icon {
+            filter: grayscale(0.8) brightness(0.6);
+        }
+        .object-card.secret-locked:hover .object-icon {
+            filter: grayscale(0.6) brightness(0.7);
+        }
+        .object-card.secret-unlocked .object-icon {
+            filter: grayscale(0.2);
+        }
+
+        /* --- Special: Letter card subtle glow when unopened --- */
+        .object-card[data-object="letter"]:not(.visited) {
+            border-color: #2e2e2e;
+        }
+        .object-card[data-object="letter"]:not(.visited)::after {
+            content: "";
+            position: absolute;
+            inset: -1px;
+            border-radius: var(--radius-object);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), transparent 50%);
+            pointer-events: none;
+        }
+
+        /* --- Responsive grid --- */
+        @media (max-width: 540px) {
+            .desk-objects {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+                max-width: 400px;
+            }
+            .object-card {
+                aspect-ratio: 1 / 1.05;
+                padding: 1rem 0.6rem 0.8rem;
+            }
+            .desk-title {
+                margin-bottom: 1.8rem;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .desk-objects {
+                gap: 0.7rem;
+            }
+            .object-card {
+                padding: 0.8rem 0.4rem 0.6rem;
+            }
+            .object-icon {
+                font-size: 2rem;
+            }
+        }
+
+        /* ============================================================== */
+        /*                 OBJECT VIEWS (overlay / modal)                 */
+        /* ============================================================== */
+        .object-view {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: var(--color-bg);
+            padding: 2rem 1.5rem;
+            overflow-y: auto;
+            overflow-x: hidden;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--transition-smooth), transform var(--transition-smooth);
+            transform: scale(0.96) translateY(12px);
+            will-change: transform, opacity;
+        }
+
+        .object-view.active {
+            opacity: 1;
+            pointer-events: all;
+            transform: scale(1) translateY(0);
+        }
+
+        /* back button */
+        .view-back-btn {
+            position: sticky;
+            top: 0.5rem;
+            z-index: 10;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1.2rem;
+            background: var(--color-surface-elevated);
+            border: 1px solid var(--color-border);
+            border-radius: 40px;
+            color: var(--color-text-secondary);
+            font-family: var(--font-sans);
+            font-size: 0.8rem;
+            font-weight: 400;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all var(--transition-soft);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            margin-bottom: 1.8rem;
+        }
+
+        .view-back-btn:hover {
+            background: var(--color-border);
+            color: var(--color-text-primary);
+            transform: translateX(-2px);
+        }
+
+        .view-back-btn svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* view title */
+        .view-title {
+            font-family: var(--font-serif);
+            font-weight: 300;
+            font-size: clamp(1.6rem, 4vw, 2.6rem);
+            letter-spacing: 0.06em;
+            color: var(--color-text-primary);
+            margin-bottom: 0.2rem;
+            opacity: 0.85;
+        }
+
+        .view-sub {
+            font-size: 0.75rem;
+            letter-spacing: 0.15em;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            font-weight: 300;
+            margin-bottom: 2rem;
+            opacity: 0.5;
+        }
+
+        .view-content {
+            max-width: 820px;
+            margin: 0 auto;
+            padding-bottom: 4rem;
+        }
+
+        /* ============================================================== */
+        /*                   MEMORIES — TIMELINE                         */
+        /* ============================================================== */
+        .memories-timeline {
+            position: relative;
+            padding: 1rem 0 2rem;
+        }
+
+        /* vertical line */
+        .memories-timeline::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 1px;
+            background: var(--color-border);
+            transform: translateX(-50%);
+        }
+
+        .memory-item {
+            position: relative;
+            display: flex;
+            align-items: center;
+            margin-bottom: 3rem;
+            width: 100%;
+            opacity: 0.6;
+            transition: opacity var(--transition-soft);
+            cursor: pointer;
+        }
+
+        .memory-item:hover {
+            opacity: 1;
+        }
+
+        .memory-item .memory-content {
+            width: 42%;
+            padding: 0.6rem;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-card);
+            transition: all var(--transition-soft);
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .memory-item .memory-content:hover {
+            border-color: #444;
+            transform: scale(1.02);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        /* alternate left / right */
+        .memory-item.left {
+            justify-content: flex-start;
+        }
+        .memory-item.left .memory-content {
+            margin-left: 0;
+            margin-right: auto;
+        }
+
+        .memory-item.right {
+            justify-content: flex-end;
+        }
+        .memory-item.right .memory-content {
+            margin-right: 0;
+            margin-left: auto;
+        }
+
+        /* dot on the line */
+        .memory-item .timeline-dot {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--color-border);
+            border: 2px solid var(--color-bg);
+            z-index: 2;
+            transition: background var(--transition-soft);
+        }
+
+        .memory-item:hover .timeline-dot {
+            background: var(--color-text-secondary);
+        }
+
+        /* media inside memory */
+        .memory-media {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            border-radius: calc(var(--radius-card) - 4px);
+            overflow: hidden;
+            background: var(--color-surface-elevated);
+        }
+
+        .memory-media img,
+        .memory-media video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: all var(--transition-soft);
+        }
+
+        /* overlay: grayscale + blur + dark */
+        .memory-media .media-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            transition: all var(--transition-soft);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .memory-media:hover .media-overlay {
+            background: rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(0px);
+            -webkit-backdrop-filter: blur(0px);
+        }
+
+        .memory-media img {
+            filter: grayscale(0.7) contrast(0.9);
+            transition: filter var(--transition-soft);
+        }
+
+        .memory-media:hover img {
+            filter: grayscale(0.2) contrast(1);
+        }
+
+        .memory-media video {
+            filter: grayscale(0.7) contrast(0.9);
+            transition: filter var(--transition-soft);
+        }
+
+        .memory-media:hover video {
+            filter: grayscale(0.2) contrast(1);
+        }
+
+        /* caption */
+        .memory-caption {
+            padding: 0.6rem 0.3rem 0.2rem;
+            font-size: 0.7rem;
+            letter-spacing: 0.03em;
+            color: var(--color-text-secondary);
+            font-weight: 300;
+            text-align: center;
+            line-height: 1.5;
+            opacity: 0.7;
+            transition: opacity var(--transition-soft);
+        }
+
+        .memory-item:hover .memory-caption {
+            opacity: 1;
+        }
+
+        /* responsive memories */
+        @media (max-width: 640px) {
+            .memories-timeline::before {
+                left: 20px;
+            }
+            .memory-item {
+                flex-direction: column;
+                align-items: flex-start;
+                padding-left: 44px;
+                margin-bottom: 2rem;
+            }
+            .memory-item .memory-content {
+                width: 100%;
+            }
+            .memory-item .timeline-dot {
+                left: 20px;
+                top: 16px;
+                transform: translate(-50%, 0);
+            }
+            .memory-item.left,
+            .memory-item.right {
+                justify-content: flex-start;
+            }
+            .memory-item.left .memory-content,
+            .memory-item.right .memory-content {
+                margin: 0;
+            }
+        }
+
+        /* ============================================================== */
+        /*                  MEDIA MODAL (zoom)                           */
+        /* ============================================================== */
+        #media-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--transition-smooth);
+            padding: 2rem;
+        }
+
+        #media-modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            max-width: 720px;
+            width: 100%;
+            max-height: 80vh;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-card);
+            overflow: hidden;
+            transform: scale(0.92) translateY(20px);
+            transition: transform var(--transition-smooth);
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.8);
+        }
+
+        #media-modal.active .modal-content {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-content .modal-media {
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            background: var(--color-bg);
+        }
+
+        .modal-content .modal-media img,
+        .modal-content .modal-media video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            background: var(--color-bg);
+        }
+
+        .modal-content .modal-caption {
+            padding: 1rem 1.2rem 1.2rem;
+            font-size: 0.8rem;
+            color: var(--color-text-secondary);
+            text-align: center;
+            letter-spacing: 0.04em;
+            font-weight: 300;
+            line-height: 1.6;
+            border-top: 1px solid var(--color-border);
+        }
+
+        .modal-close-btn {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--color-surface-elevated);
+            border: 1px solid var(--color-border);
+            color: var(--color-text-secondary);
+            font-size: 1.4rem;
+            cursor: pointer;
+            transition: all var(--transition-soft);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .modal-close-btn:hover {
+            background: var(--color-border);
+            color: var(--color-text-primary);
+            transform: rotate(90deg);
+        }
+
+        @media (max-width: 540px) {
+            #media-modal {
+                padding: 0.5rem;
+            }
+            .modal-content {
+                max-height: 90vh;
+                border-radius: var(--radius-object);
+            }
+            .modal-close-btn {
+                top: 0.8rem;
+                right: 0.8rem;
+                width: 36px;
+                height: 36px;
+                font-size: 1rem;
+            }
+            .modal-content .modal-caption {
+                font-size: 0.7rem;
+                padding: 0.8rem 1rem;
+            }
+        }
+
+        /* ============================================================== */
+        /*                   TIMELINE VIEW                               */
+        /* ============================================================== */
+        .timeline-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+            padding: 0.5rem 0 2rem;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 1.5rem;
+            align-items: flex-start;
+            padding: 1.2rem 1.5rem;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-card);
+            transition: all var(--transition-soft);
+            opacity: 0;
+            transform: translateY(24px) scale(0.97);
+            filter: blur(4px);
+            will-change: transform, opacity, filter;
+        }
+
+        .timeline-item.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            filter: blur(0);
+        }
+
+        /* each item gets a different animation combo via data attribute */
+        .timeline-item[data-anim="fade"] {
+            transition: opacity 0.7s ease, transform 0.7s ease, filter 0.7s ease;
+        }
+        .timeline-item[data-anim="slide"] {
+            transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.23, 1, 0.32, 1), filter 0.7s ease;
+            transform: translateX(-30px) scale(0.97);
+        }
+        .timeline-item[data-anim="slide"].visible {
+            transform: translateX(0) scale(1);
+        }
+        .timeline-item[data-anim="scale"] {
+            transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.7s ease;
+            transform: scale(0.85);
+        }
+        .timeline-item[data-anim="scale"].visible {
+            transform: scale(1);
+        }
+        .timeline-item[data-anim="blur"] {
+            transition: opacity 0.7s ease, transform 0.7s ease, filter 0.9s ease;
+            filter: blur(8px);
+            transform: scale(0.95);
+        }
+        .timeline-item[data-anim="blur"].visible {
+            filter: blur(0);
+            transform: scale(1);
+        }
+        .timeline-item[data-anim="parallax"] {
+            transition: opacity 0.7s ease, transform 0.9s cubic-bezier(0.23, 1, 0.32, 1), filter 0.7s ease;
+            transform: translateY(40px) scale(0.94);
+        }
+        .timeline-item[data-anim="parallax"].visible {
+            transform: translateY(0) scale(1);
+        }
+
+        .timeline-item:hover {
+            border-color: #444;
+            background: var(--color-surface-elevated);
+            transform: scale(1.01) !important;
+        }
+
+        .timeline-date {
+            flex-shrink: 0;
+            font-size: 0.7rem;
+            font-weight: 400;
+            letter-spacing: 0.08em;
+            color: var(--color-text-muted);
+            min-width: 80px;
+            padding-top: 0.1rem;
+            text-transform: uppercase;
+        }
+
+        .timeline-text {
+            font-size: 0.9rem;
+            line-height: 1.7;
+            color: var(--color-text-secondary);
+            font-weight: 300;
+        }
+
+        .timeline-text strong {
+            color: var(--color-text-primary);
+            font-weight: 400;
+        }
+
+        @media (max-width: 540px) {
+            .timeline-item {
+                flex-direction: column;
+                gap: 0.4rem;
+                padding: 1rem 1.2rem;
+            }
+            .timeline-date {
+                font-size: 0.6rem;
+                min-width: auto;
+            }
+            .timeline-text {
+                font-size: 0.8rem;
+                line-height: 1.6;
+            }
+        }
+
+        /* ============================================================== */
+        /*                   MUSIC VIEW                                   */
+        /* ============================================================== */
+        .music-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.8rem;
+            padding: 1rem 0 2rem;
+        }
+
+        /* vinyl record visual */
+        .vinyl-wrapper {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            flex-shrink: 0;
+        }
+
+        .vinyl-disc {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #2a2a2a, #0d0d0d 70%, #050505);
+            box-shadow:
+                0 0 0 6px var(--color-surface-elevated),
+                0 0 0 8px var(--color-border),
+                0 20px 60px rgba(0, 0, 0, 0.8);
+            position: relative;
+            transition: transform var(--transition-smooth);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* vinyl grooves */
+        .vinyl-disc::before {
+            content: "";
+            position: absolute;
+            inset: 14%;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            box-shadow:
+                inset 0 0 0 4px rgba(255, 255, 255, 0.02),
+                inset 0 0 0 12px rgba(255, 255, 255, 0.015),
+                inset 0 0 0 24px rgba(255, 255, 255, 0.01),
+                inset 0 0 0 40px rgba(255, 255, 255, 0.008);
+        }
+
+        /* center label */
+        .vinyl-disc .center-label {
+            width: 32%;
+            height: 32%;
+            border-radius: 50%;
+            background: radial-gradient(circle at 40% 35%, #1a1a1a, #0a0a0a);
+            border: 1px solid #2a2a2a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.5rem;
+            letter-spacing: 0.1em;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            font-weight: 300;
+            position: relative;
+            z-index: 1;
+        }
+
+        .vinyl-disc .center-label span {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            letter-spacing: 0.2em;
+            font-size: 0.45rem;
+        }
+
+        /* spinning state */
+        .vinyl-disc.spinning {
+            animation: spin 3s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* music info */
+        .music-info {
+            text-align: center;
+        }
+        .music-info .song-title {
+            font-family: var(--font-serif);
+            font-size: clamp(1.3rem, 3vw, 1.8rem);
+            font-weight: 300;
+            color: var(--color-text-primary);
+            letter-spacing: 0.04em;
+            margin-bottom: 0.2rem;
+        }
+        .music-info .song-artist {
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-weight: 300;
+        }
+
+        /* reasoning */
+        .music-reason {
+            max-width: 500px;
+            padding: 1.2rem 1.8rem;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-card);
+            font-size: 0.8rem;
+            line-height: 1.8;
+            color: var(--color-text-secondary);
+            text-align: center;
+            font-weight: 300;
+            letter-spacing: 0.02em;
+        }
+
+        .music-reason::before {
+            content: "“";
+            font-family: var(--font-serif);
+            font-size: 1.6rem;
+            color: var(--color-text-muted);
+            opacity: 0.4;
+            display: block;
+            margin-bottom: -0.2rem;
+        }
+        .music-reason::after {
+            content: "”";
+            font-family: var(--font-serif);
+            font-size: 1.6rem;
+            color: var(--color-text-muted);
+            opacity: 0.4;
+            display: block;
+            margin-top: -0.4rem;
+        }
+
+        /* player controls */
+        .music-controls {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            margin-top: 0.2rem;
+        }
+
+        .music-controls button {
+            background: var(--color-surface-elevated);
+            border: 1px solid var(--color-border);
+            border-radius: 50%;
+            width: 52px;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-text-primary);
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: all var(--transition-soft);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .music-controls button:hover {
+            background: var(--color-border);
+            transform: scale(1.06);
+            border-color: #444;
+        }
+
+        .music-controls button:active {
+            transform: scale(0.92);
+        }
+
+        .music-controls .play-btn {
+            width: 64px;
+            height: 64px;
+            font-size: 1.6rem;
+        }
+
+        .music-controls .play-btn.playing {
+            background: var(--color-border);
+        }
+
+        /* progress bar */
+        .music-progress {
+            width: 100%;
+            max-width: 360px;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .music-progress input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            flex: 1;
+            height: 2px;
+            background: var(--color-border);
+            border-radius: 2px;
+            outline: none;
+            transition: background var(--transition-soft);
+            cursor: pointer;
+        }
+
+        .music-progress input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--color-text-primary);
+            cursor: pointer;
+            border: none;
+            transition: all var(--transition-soft);
+            box-shadow: 0 0 16px rgba(255, 255, 255, 0.1);
+        }
+
+        .music-progress input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
+
+        .music-progress input[type="range"]::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--color-text-primary);
+            cursor: pointer;
+            border: none;
+        }
+
+        .music-progress .time-label {
+            font-size: 0.6rem;
+            color: var(--color-text-muted);
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 0.04em;
+            min-width: 36px;
+        }
+
+        @media (max-width: 480px) {
+            .vinyl-wrapper {
+                width: 160px;
+                height: 160px;
+            }
+            .music-controls button {
+                width: 44px;
+                height: 44px;
+                font-size: 1rem;
+            }
+            .music-controls .play-btn {
+                width: 54px;
+                height: 54px;
+                font-size: 1.3rem;
+            }
+            .music-reason {
+                padding: 1rem 1.2rem;
+                font-size: 0.7rem;
+            }
+            .music-progress {
+                max-width: 260px;
+            }
+        }
+
+        /* ============================================================== */
+        /*                   LETTER VIEW                                  */
+        /* ============================================================== */
+        .letter-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 1rem 0 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .letter-paper {
+            width: 100%;
+            padding: 2.4rem 2.8rem;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-card);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+            position: relative;
+            min-height: 260px;
+        }
+
+        /* subtle fold / crease */
+        .letter-paper::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 10%;
+            right: 10%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--color-border), transparent);
+            opacity: 0.3;
+        }
+
+        .letter-text {
+            font-family: var(--font-serif);
+            font-weight: 300;
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            line-height: 0.5;
+            color: var(--color-text-secondary);
+            white-space: pre-wrap;
+            word-break: break-word;
+            letter-spacing: 0.02em;
+        }
+
+        .letter-text .line {
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+            display: block;
+        }
+
+        .letter-text .line.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* typing cursor effect on the last visible line */
+        .letter-text .line.typing::after {
+            content: "▍";
+            display: inline-block;
+            color: var(--color-text-muted);
+            animation: blink 1s step-end infinite;
+            margin-left: 2px;
+            font-weight: 300;
+        }
+
+        @keyframes blink {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0;
+            }
+        }
+
+        .letter-signature {
+            margin-top: 1.8rem;
+            text-align: right;
+            font-family: var(--font-serif);
+            font-size: 0.9rem;
+            color: var(--color-text-muted);
+            font-weight: 300;
+            letter-spacing: 0.06em;
+            opacity: 0.6;
+            border-top: 1px solid var(--color-border);
+            padding-top: 1.2rem;
+        }
+
+        @media (max-width: 540px) {
+            .letter-paper {
+                padding: 1.6rem 1.4rem;
+                min-height: 200px;
+            }
+            .letter-text {
+                font-size: 0.9rem;
+                line-height: 1.9;
+            }
+            .letter-signature {
+                font-size: 0.75rem;
+                margin-top: 1.2rem;
+                padding-top: 0.8rem;
+            }
+        }
+
+        /* ============================================================== */
+        /*                   SECRET VIEW                                  */
+        /* ============================================================== */
+        .secret-container {
+            max-width: 560px;
+            margin: 0 auto;
+            padding: 1rem 0 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.8rem;
+        }
+
+        /* drawer visual */
+        .secret-drawer {
+            width: 100%;
+            max-width: 400px;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-card);
+            padding: 1.8rem 1.5rem;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            transition: all var(--transition-soft);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .secret-drawer .drawer-handle {
+            width: 60px;
+            height: 6px;
+            background: var(--color-border);
+            border-radius: 4px;
+            margin: 0 auto 1.2rem;
+            transition: background var(--transition-soft);
+        }
+
+        .secret-drawer.locked .drawer-handle {
+            background: var(--color-border);
+        }
+
+        .secret-drawer.unlocked .drawer-handle {
+            background: var(--color-text-muted);
+        }
+
+        .secret-drawer .drawer-icon {
+            font-size: 3rem;
+            margin-bottom: 0.6rem;
+            display: block;
+            transition: all var(--transition-soft);
+        }
+
+        .secret-drawer.locked .drawer-icon {
+            filter: grayscale(0.6) brightness(0.5);
+        }
+        .secret-drawer.unlocked .drawer-icon {
+            filter: grayscale(0);
+        }
+
+        .secret-drawer .drawer-label {
+            font-size: 0.7rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--color-text-muted);
+            font-weight: 300;
+        }
+
+        .secret-drawer .drawer-status {
+            font-size: 0.6rem;
+            color: var(--color-text-muted);
+            margin-top: 0.6rem;
+            letter-spacing: 0.05em;
+            opacity: 0.5;
+        }
+
+        /* secret content (revealed) */
+        .secret-reveal {
+            width: 100%;
+            max-width: 400px;
+            background: var(--color-surface-elevated);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-card);
+            padding: 1.8rem 1.5rem;
+            text-align: center;
+            transition: all var(--transition-smooth);
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+            pointer-events: none;
+        }
+
+        .secret-reveal.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: all;
+        }
+
+        .secret-reveal .secret-media {
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            border-radius: calc(var(--radius-card) - 6px);
+            overflow: hidden;
+            background: var(--color-bg);
+            margin-bottom: 1rem;
+        }
+
+        .secret-reveal .secret-media img,
+        .secret-reveal .secret-media video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .secret-reveal .secret-text {
+            font-family: var(--font-serif);
+            font-size: 1rem;
+            line-height: 1.8;
+            color: var(--color-text-secondary);
+            font-weight: 300;
+            letter-spacing: 0.02em;
+        }
+
+        /* if locked, show a subtle lock animation on hover */
+        .secret-drawer.locked:hover {
+            border-color: #3a3a3a;
+            transform: translateY(-2px);
+        }
+
+        /* ============================================================== */
+        /*                   RESPONSIVE OVERFLOW                          */
+        /* ============================================================== */
+        @media (max-height: 700px) {
+            .desk-title {
+                margin-bottom: 1.2rem;
+            }
+            .desk-title h1 {
+                font-size: clamp(1.6rem, 4vw, 2.6rem);
+            }
+            .object-card {
+                padding: 1rem 0.5rem 0.7rem;
+                aspect-ratio: 1 / 1.05;
+            }
+            .object-icon {
+                font-size: clamp(1.8rem, 4vw, 2.8rem);
+            }
+        }
+
+        @media (max-height: 600px) {
+            .desk-objects {
+                gap: 0.8rem;
+                max-width: 500px;
+            }
+            .object-card {
+                padding: 0.6rem 0.4rem 0.5rem;
+            }
+            .object-icon {
+                font-size: 1.6rem;
+                margin-bottom: 0.2rem;
+            }
+            .object-label {
+                font-size: 0.5rem;
+            }
+            .desk-title {
+                margin-bottom: 0.8rem;
+            }
+            .desk-title h1 {
+                font-size: 1.6rem;
+            }
+            .desk-title .sub {
+                font-size: 0.5rem;
+            }
+        }
+
+        /* ============================================================== */
+        /*                   LOADING / TRANSITION HELPERS                 */
+        /* ============================================================== */
+        .view-enter {
+            animation: viewEnter 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+        }
+
+        @keyframes viewEnter {
+            0% {
+                opacity: 0;
+                transform: scale(0.96) translateY(16px);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        /* ============================================================== */
+        /*                NO-JS FALLBACK (minimal)                       */
+        /* ============================================================== */
+        .no-js-message {
+            display: none;
+            padding: 2rem;
+            text-align: center;
+            color: var(--color-text-muted);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ============================================================== -->
+    <!--                         APP ROOT                                -->
+    <!-- ============================================================== -->
+    <div id="app">
+
+        <!-- ============================================================ -->
+        <!--                      DESK VIEW (HOME)                        -->
+        <!-- ============================================================ -->
+        <div id="desk-view" role="main" aria-label="Meja kenangan">
+
+            <div class="desk-title">
+                <h1>Memoir</h1>
+                <div class="sub">— kapsul waktu digital —</div>
+            </div>
+
+            <div class="desk-objects" id="deskObjects">
+                <!-- Each card will be rendered by JavaScript from CONFIG -->
+            </div>
+
+            <!-- subtle footer -->
+            <div style="position:relative;z-index:1;margin-top:2.5rem;font-size:0.5rem;letter-spacing:0.15em;color:var(--color-text-muted);opacity:0.2;text-transform:uppercase;">
+                sentuh untuk membuka
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!--                  MEMORIES VIEW                               -->
+        <!-- ============================================================ -->
+        <div id="memories-view" class="object-view" role="dialog" aria-label="Kenangan">
+            <button class="view-back-btn" data-close-view="memories">
+                <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Kembali
+            </button>
+            <div class="view-content">
+                <div class="view-title">Kenangan</div>
+                <div class="view-sub">— polaroid dari masa —</div>
+                <div class="memories-timeline" id="memoriesTimeline">
+                    <!-- Rendered by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!--                  TIMELINE VIEW                               -->
+        <!-- ============================================================ -->
+        <div id="timeline-view" class="object-view" role="dialog" aria-label="Perjalanan">
+            <button class="view-back-btn" data-close-view="timeline">
+                <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Kembali
+            </button>
+            <div class="view-content">
+                <div class="view-title">Perjalanan</div>
+                <div class="view-sub">— catatan waktu —</div>
+                <div class="timeline-list" id="timelineList">
+                    <!-- Rendered by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!--                  MUSIC VIEW                                  -->
+        <!-- ============================================================ -->
+        <div id="music-view" class="object-view" role="dialog" aria-label="Musik">
+            <button class="view-back-btn" data-close-view="music">
+                <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Kembali
+            </button>
+            <div class="view-content">
+                <div class="view-title">Musik</div>
+                <div class="view-sub">— piringan hitam —</div>
+                <div class="music-container" id="musicContainer">
+                    <!-- Rendered by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!--                  LETTER VIEW                                 -->
+        <!-- ============================================================ -->
+        <div id="letter-view" class="object-view" role="dialog" aria-label="Surat">
+            <button class="view-back-btn" data-close-view="letter">
+                <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Kembali
+            </button>
+            <div class="view-content">
+                <div class="view-title">Surat</div>
+                <div class="view-sub">— untukmu —</div>
+                <div class="letter-container" id="letterContainer">
+                    <!-- Rendered by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!--                  SECRET VIEW                                 -->
+        <!-- ============================================================ -->
+        <div id="secret-view" class="object-view" role="dialog" aria-label="Rahasia">
+            <button class="view-back-btn" data-close-view="secret">
+                <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Kembali
+            </button>
+            <div class="view-content">
+                <div class="view-title">Rahasia</div>
+                <div class="view-sub">— laci terkunci —</div>
+                <div class="secret-container" id="secretContainer">
+                    <!-- Rendered by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!--                  MEDIA MODAL                                 -->
+        <!-- ============================================================ -->
+        <div id="media-modal" role="dialog" aria-label="Media detail">
+            <button class="modal-close-btn" id="modalCloseBtn" aria-label="Tutup">✕</button>
+            <div class="modal-content">
+                <div class="modal-media" id="modalMedia">
+                    <!-- filled by JS -->
+                </div>
+                <div class="modal-caption" id="modalCaption">
+                    <!-- filled by JS -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ============================================================== -->
+    <!--                    JAVASCRIPT — MAIN                           -->
+    <!-- ============================================================== -->
+    <script>
+        // ==============================================================
+        //                  CONFIGURATION BLOCK
+        //  —————————————————————————————————————————————
+        //  Ubah data di bawah ini sesuai keinginanmu.
+        //  Semua path media mengarah ke folder `attach/`.
+        // ==============================================================
+
+        const CONFIG = {
+
+            // ---- NAMA APLIKASI / TEKS PEMBUKA ----
+            appName: "Memoir",
+            tagline: "kapsul waktu digital",
+
+            // ---- MEMORIES — Foto & Video ----
+            // Setiap item: { type: 'image' | 'video', file: 'nama_file', caption: 'teks' }
+            // File harus diletakkan di folder `attach/`
+            memories: [{
+                type: 'image',
+                file: 'foto1.jpg',
+                caption: 'Momen pertama yang tak terlupakan.'
+            }, {
+                type: 'image',
+                file: 'foto2.jpg',
+                caption: 'Senyum yang menyimpan seribu cerita.'
+            }, {
+                type: 'video',
+                file: 'video1.mp4',
+                caption: 'Rekaman kebersamaan yang abadi.'
+            }, {
+                type: 'image',
+                file: 'foto3.jpg',
+                caption: 'Langkah kecil, kenangan besar.'
+            }, {
+                type: 'image',
+                file: 'foto4.jpg',
+                caption: 'Cahaya di antara waktu.'
+            }, {
+                type: 'video',
+                file: 'video2.mp4',
+                caption: 'Saat-saat yang tak tergantikan.'
+            }],
+
+            // ---- TIMELINE — Cerita & Tanggal ----
+            // Setiap item: { date: 'DD/MM/YYYY', text: 'cerita...' }
+            timeline: [{
+                date: '12/07/2025',
+                text: 'Aku beryukur mengenal wanita seperti kamu.'
+            }, {
+                date: '12/08/2025',
+                text: 'Aku tidak pernah menyangka kita akan <strong>semesra</strong> ini.'
+            }, {
+                date: '1/09/2025',
+                text: 'cinta ini berubah menjadi obsessi.'
+            }, {
+                date: '12/10/2025',
+                text: 'Semakin lama hubungan ternyata semakin banyak rintangan.'
+            }, 
+            {
+                date: '20/12/2025',
+                text: 'Kita saling harap kali ini kita gak bakalan kecewa lagi.'
+            }, 
+            {
+                date: '1/02/2026',
+                text: 'Kalau dulu tidak berani untuk memulai dari awal lagi, mungkin sekarang kita tidak akan menjalani hubungan yang bahagia.'
+            }, 
+            {
+                date: '15/03/2024',
+                text: 'Terima kasih telah membuat ku merasa dicintai dan disayang, walaupun hanya sesaat.'
+            }],
+
+            // ---- LETTER — Isi Surat ----
+            // Gunakan \n untuk baris baru. Teks akan muncul dengan efek mengetik.
+            letterText: `<center>Bukan Tentang Kembali</center>
+
+            Aku pernah menjadikanmu
+            sebagai rumah paling nyaman
+            di antara ramainya dunia.
+            Lalu waktu mengajarkan,
+            bahwa tak semua rumah
+            ditakdirkan untuk dihuni selamanya.
+
+            Kita pernah saling menggenggam,
+            menguatkan mimpi yang sama,
+            dan percaya bahwa "selamanya"
+            bukan sekadar rangkaian kata.
+            Namun hidup ternyata
+            pandai mengubah arah cerita.
+
+            Kini namamu hanya tinggal
+            sebagai doa yang tak lagi kusampaikan,
+            dan kenangan yang sesekali
+            datang tanpa permisi.
+            Bukan untuk membuatku kembali,
+            melainkan mengingatkanku
+            bahwa aku pernah mencintai
+            dengan segenap hati.
+
+            Jika suatu hari kita bertemu,
+            aku tak ingin mengulang kisah lama.
+            Cukup saling tersenyum,
+            lalu melanjutkan langkah
+            ke tujuan masing-masing.
+
+            Karena mencintaimu
+            tak pernah menjadi penyesalanku.
+            Yang kuikhlaskan hanyalah
+            kenyataan bahwa
+            tak semua yang saling mencinta
+            ditakdirkan untuk tetap bersama.`,
+
+            // ---- MUSIC — Audio & Alasan ----
+            // file: nama file audio di folder `attach/`
+            // title: judul lagu
+            // artist: nama artis
+            // reason: alasan mengapa lagu ini dipilih
+            music: {
+                file: 'lagu.mp3',
+                title: 'The One That Got Away',
+                artist: 'Katy Perry',
+                reason: 'Lagu The One That Got Away menggambarkan kerinduan akan cinta masa muda yang tidak sempat dipertahankan hingga akhir. Lirik-lirik dalam lagu ini mengungkapkan rasa kehilangan yang dalam dan harapan akan kesempatan kedua.'
+            },
+
+            // ---- SECRET — Konten Rahasia ----
+            // Setelah semua menu dibuka, laci akan terbuka.
+            // Isi secret bisa berupa teks, foto, atau video.
+            // type: 'text' | 'image' | 'video'
+            // content: untuk text → string, untuk image/video → nama file di `attach/`
+            secret: {
+                type: 'text',
+                content: 'Untukmu yang menemukan ini — terima kasih telah meluangkan waktu. Kenangan ini adalah hadiah kecil yang semoga selalu mengingatkanmu bahwa ada yang peduli, tanpa syarat, tanpa batas.'
+                // Jika ingin foto: type: 'image', content: 'foto_rahasia.jpg'
+                // Jika ingin video: type: 'video', content: 'video_rahasia.mp4'
+            },
+
+            // ---- STATE — Kondisi Interaksi ----
+            // Jangan ubah state di sini secara manual,
+            // akan diupdate otomatis oleh aplikasi.
+            state: {
+                letterOpened: false,
+                memoriesVisited: false,
+                timelineVisited: false,
+                musicPlayed: false,
+                secretUnlocked: false,
+                // total progress
+                get allVisited() {
+                    return this.letterOpened &&
+                        this.memoriesVisited &&
+                        this.timelineVisited &&
+                        this.musicPlayed;
+                }
+            }
+        };
+
+        // ==============================================================
+        //                    END OF CONFIGURATION
+        // ==============================================================
+
+        // ==============================================================
+        //                    APPLICATION CODE
+        //  —————————————————————————————————————————————
+        //  Di bawah ini adalah logika aplikasi.
+        //  Kamu tidak perlu mengubahnya kecuali ingin
+        //  menyesuaikan perilaku atau animasi.
+        // ==============================================================
+
+        (function() {
+            'use strict';
+
+            // --- DOM refs ---
+            const deskView = document.getElementById('desk-view');
+            const deskObjects = document.getElementById('deskObjects');
+            const views = {
+                memories: document.getElementById('memories-view'),
+                timeline: document.getElementById('timeline-view'),
+                music: document.getElementById('music-view'),
+                letter: document.getElementById('letter-view'),
+                secret: document.getElementById('secret-view'),
+            };
+            const modal = document.getElementById('media-modal');
+            const modalMedia = document.getElementById('modalMedia');
+            const modalCaption = document.getElementById('modalCaption');
+            const modalClose = document.getElementById('modalCloseBtn');
+
+            // --- State ---
+            const state = CONFIG.state;
+            let currentView = null; // 'memories' | 'timeline' | 'music' | 'letter' | 'secret' | null
+            let musicAudio = null;
+            let isMusicPlaying = false;
+            let letterLinesRevealed = 0;
+            let letterTimer = null;
+
+            // --- Helper: path ke attach ---
+            function assetPath(filename) {
+                return 'attach/' + filename;
+            }
+
+            // --- Helper: render desk objects ---
+            function renderDesk() {
+                const objects = [{
+                    id: 'letter',
+                    icon: '✉️',
+                    label: 'Surat',
+                    visited: state.letterOpened,
+                }, {
+                    id: 'memories',
+                    icon: '🖼️',
+                    label: 'Kenangan',
+                    visited: state.memoriesVisited,
+                }, {
+                    id: 'timeline',
+                    icon: '📖',
+                    label: 'Perjalanan',
+                    visited: state.timelineVisited,
+                }, {
+                    id: 'music',
+                    icon: '🎵',
+                    label: 'Musik',
+                    visited: state.musicPlayed,
+                }, {
+                    id: 'secret',
+                    icon: '🔒',
+                    label: 'Rahasia',
+                    visited: state.secretUnlocked,
+                    locked: !state.allVisited,
+                }, ];
+
+                deskObjects.innerHTML = objects.map(obj => {
+                    const isSecret = obj.id === 'secret';
+                    const isLocked = isSecret && obj.locked;
+                    const visitedClass = obj.visited ? 'visited' : '';
+                    const lockClass = isLocked ? 'secret-locked' : (isSecret ? 'secret-unlocked' : '');
+                    const iconEmoji = isSecret && isLocked ? '🔒' : (isSecret && !isLocked ? '🗄️' : obj.icon);
+
+                    return `
+                        <div class="object-card ${visitedClass} ${lockClass}"
+                             data-object="${obj.id}"
+                             role="button"
+                             tabindex="0"
+                             aria-label="${obj.label}">
+                            <div class="object-icon">${iconEmoji}</div>
+                            <div class="object-label">${obj.label}</div>
+                            <span class="visit-badge">${obj.visited ? '✓' : ''}</span>
+                        </div>
+                    `;
+                }).join('');
+
+                // --- event listeners ---
+                deskObjects.querySelectorAll('.object-card').forEach(card => {
+                    const objId = card.dataset.object;
+                    card.addEventListener('click', () => openObject(objId));
+                    card.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            openObject(objId);
+                        }
+                    });
+                });
+            }
+
+            // --- Open an object ---
+            function openObject(objId) {
+                // if secret is locked, check if all others are visited
+                if (objId === 'secret' && !state.allVisited) {
+                    // subtle feedback: shake or just don't open
+                    const card = deskObjects.querySelector('[data-object="secret"]');
+                    if (card) {
+                        card.style.transform = 'scale(0.92)';
+                        setTimeout(() => { card.style.transform = ''; }, 300);
+                    }
+                    return;
+                }
+
+                // close any open modal first
+                closeModal();
+
+                // hide desk with zoom-out effect
+                deskView.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                deskView.style.opacity = '0';
+                deskView.style.transform = 'scale(0.94)';
+
+                setTimeout(() => {
+                    deskView.classList.add('hidden');
+                    deskView.style.opacity = '1';
+                    deskView.style.transform = 'scale(1)';
+
+                    // show the view
+                    const viewEl = views[objId];
+                    if (viewEl) {
+                        // render content if needed
+                        if (objId === 'memories') renderMemories();
+                        if (objId === 'timeline') renderTimeline();
+                        if (objId === 'music') renderMusic();
+                        if (objId === 'letter') renderLetter();
+                        if (objId === 'secret') renderSecret();
+
+                        viewEl.classList.add('active');
+                        currentView = objId;
+
+                        // mark as visited in state
+                        if (objId === 'letter') state.letterOpened = true;
+                        if (objId === 'memories') state.memoriesVisited = true;
+                        if (objId === 'timeline') state.timelineVisited = true;
+                        if (objId === 'music') state.musicPlayed = true;
+                        if (objId === 'secret') state.secretUnlocked = true;
+
+                        // update desk state
+                        renderDesk();
+
+                        // trigger any view-specific init
+                        if (objId === 'letter') startLetterAnimation();
+                        if (objId === 'music') initMusicPlayer();
+                        if (objId === 'timeline') initTimelineObserver();
+                        if (objId === 'memories') initMemoriesObserver();
+                    }
+                }, 450);
+            }
+
+            // --- Close current view back to desk ---
+            function closeView(viewId) {
+                const viewEl = views[viewId];
+                if (!viewEl) return;
+
+                viewEl.classList.remove('active');
+                currentView = null;
+
+                // stop music if playing
+                if (viewId === 'music' && musicAudio) {
+                    musicAudio.pause();
+                    isMusicPlaying = false;
+                    updateMusicUI();
+                }
+
+                // clear letter timer
+                if (viewId === 'letter' && letterTimer) {
+                    clearInterval(letterTimer);
+                    letterTimer = null;
+                }
+
+                // show desk with zoom-in
+                deskView.classList.remove('hidden');
+                deskView.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                deskView.style.opacity = '0';
+                deskView.style.transform = 'scale(0.94)';
+
+                requestAnimationFrame(() => {
+                    deskView.style.opacity = '1';
+                    deskView.style.transform = 'scale(1)';
+                });
+
+                // update desk (state might have changed)
+                renderDesk();
+            }
+
+            // --- Close view via back button ---
+            document.querySelectorAll('[data-close-view]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const viewId = this.dataset.closeView;
+                    closeView(viewId);
+                });
+            });
+
+            // --- Render Memories ---
+            function renderMemories() {
+                const container = document.getElementById('memoriesTimeline');
+                const items = CONFIG.memories;
+                if (!items || items.length === 0) {
+                    container.innerHTML =
+                        '<p style="color:var(--color-text-muted);text-align:center;padding:2rem 0;">Belum ada kenangan yang ditambahkan.</p>';
+                    return;
+                }
+
+                let html = '';
+                items.forEach((item, index) => {
+                    const side = index % 2 === 0 ? 'left' : 'right';
+                    const isVideo = item.type === 'video';
+                    const filePath = assetPath(item.file);
+                    const mediaTag = isVideo ?
+                        `<video src="${filePath}" muted preload="metadata"></video>` :
+                        `<img src="${filePath}" alt="${item.caption || 'Kenangan'}" loading="lazy" />`;
+
+                    html += `
+                        <div class="memory-item ${side}" data-index="${index}" data-type="${item.type}" data-file="${item.file}" data-caption="${item.caption || ''}">
+                            <div class="memory-content">
+                                <div class="memory-media">
+                                    ${mediaTag}
+                                    <div class="media-overlay"></div>
+                                </div>
+                                <div class="memory-caption">${item.caption || ''}</div>
+                            </div>
+                            <div class="timeline-dot"></div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+
+                // --- click to open modal ---
+                container.querySelectorAll('.memory-item').forEach(el => {
+                    el.addEventListener('click', function() {
+                        const type = this.dataset.type;
+                        const file = this.dataset.file;
+                        const caption = this.dataset.caption || '';
+                        openMediaModal(type, file, caption);
+                    });
+                });
+            }
+
+            // --- Init memories observer (for fade-in on scroll) ---
+            function initMemoriesObserver() {
+                // already handled by CSS — items are visible by default
+                // but we can add a subtle entrance if needed
+            }
+
+            // --- Render Timeline ---
+            function renderTimeline() {
+                const container = document.getElementById('timelineList');
+                const items = CONFIG.timeline;
+                if (!items || items.length === 0) {
+                    container.innerHTML =
+                        '<p style="color:var(--color-text-muted);text-align:center;padding:2rem 0;">Belum ada catatan perjalanan.</p>';
+                    return;
+                }
+
+                const animations = ['fade', 'slide', 'scale', 'blur', 'parallax'];
+
+                let html = '';
+                items.forEach((item, index) => {
+                    const anim = animations[index % animations.length];
+                    html += `
+                        <div class="timeline-item" data-anim="${anim}">
+                            <div class="timeline-date">${item.date}</div>
+                            <div class="timeline-text">${item.text}</div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+            }
+
+            // --- Timeline scroll observer ---
+            function initTimelineObserver() {
+                const items = document.querySelectorAll('.timeline-item');
+                if (!items.length) return;
+
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('visible');
+                        } else {
+                            // remove class when scrolling back up for reverse animation
+                            entry.target.classList.remove('visible');
+                        }
+                    });
+                }, {
+                    threshold: 0.15,
+                    rootMargin: '0px 0px -40px 0px',
+                });
+
+                items.forEach(item => observer.observe(item));
+            }
+
+            // --- Render Music ---
+            function renderMusic() {
+                const container = document.getElementById('musicContainer');
+                const music = CONFIG.music;
+                if (!music || !music.file) {
+                    container.innerHTML =
+                        '<p style="color:var(--color-text-muted);text-align:center;padding:2rem 0;">Belum ada lagu yang ditambahkan.</p>';
+                    return;
+                }
+
+                const filePath = assetPath(music.file);
+
+                container.innerHTML = `
+                    <div class="vinyl-wrapper">
+                        <div class="vinyl-disc" id="vinylDisc">
+                            <div class="center-label"><span>memoir</span></div>
+                        </div>
+                    </div>
+                    <div class="music-info">
+                        <div class="song-title">${music.title || 'Tanpa Judul'}</div>
+                        <div class="song-artist">${music.artist || '—'}</div>
+                    </div>
+                    <div class="music-reason">${music.reason || 'Sebuah melodi untuk kenangan.'}</div>
+                    <div class="music-progress">
+                        <span class="time-label" id="currentTime">0:00</span>
+                        <input type="range" id="progressSlider" min="0" max="100" value="0" step="0.1" />
+                        <span class="time-label" id="totalTime">0:00</span>
+                    </div>
+                    <div class="music-controls">
+                        <button id="musicRewind" aria-label="Mundur 10 detik">⏪</button>
+                        <button class="play-btn" id="musicPlay" aria-label="Putar / Jeda">▶</button>
+                        <button id="musicForward" aria-label="Maju 10 detik">⏩</button>
+                    </div>
+                    <audio id="musicAudio" src="${filePath}" preload="metadata"></audio>
+                `;
+            }
+
+            // --- Init music player ---
+            function initMusicPlayer() {
+                const audio = document.getElementById('musicAudio');
+                const playBtn = document.getElementById('musicPlay');
+                const slider = document.getElementById('progressSlider');
+                const currentLabel = document.getElementById('currentTime');
+                const totalLabel = document.getElementById('totalTime');
+                const vinyl = document.getElementById('vinylDisc');
+                const rewindBtn = document.getElementById('musicRewind');
+                const forwardBtn = document.getElementById('musicForward');
+
+                if (!audio) return;
+                musicAudio = audio;
+
+                // --- load metadata ---
+                audio.addEventListener('loadedmetadata', function() {
+                    const total = formatTime(audio.duration);
+                    totalLabel.textContent = total;
+                    slider.max = audio.duration;
+                });
+
+                // --- play/pause ---
+                function togglePlay() {
+                    if (audio.paused) {
+                        audio.play().catch(() => {});
+                        isMusicPlaying = true;
+                        playBtn.textContent = '⏸';
+                        playBtn.classList.add('playing');
+                        if (vinyl) vinyl.classList.add('spinning');
+                    } else {
+                        audio.pause();
+                        isMusicPlaying = false;
+                        playBtn.textContent = '▶';
+                        playBtn.classList.remove('playing');
+                        if (vinyl) vinyl.classList.remove('spinning');
+                    }
+                    // mark music as played in state
+                    state.musicPlayed = true;
+                    renderDesk();
+                }
+
+                playBtn.addEventListener('click', togglePlay);
+
+                // --- progress ---
+                audio.addEventListener('timeupdate', function() {
+                    if (!audio.duration) return;
+                    const pct = (audio.currentTime / audio.duration) * 100;
+                    slider.value = audio.currentTime;
+                    currentLabel.textContent = formatTime(audio.currentTime);
+                });
+
+                slider.addEventListener('input', function() {
+                    const val = parseFloat(this.value);
+                    if (!isNaN(val) && audio.duration) {
+                        audio.currentTime = Math.min(val, audio.duration);
+                    }
+                });
+
+                // --- rewind / forward ---
+                rewindBtn.addEventListener('click', function() {
+                    audio.currentTime = Math.max(0, audio.currentTime - 10);
+                });
+                forwardBtn.addEventListener('click', function() {
+                    if (audio.duration) {
+                        audio.currentTime = Math.min(audio.duration, audio.currentTime + 10);
+                    }
+                });
+
+                // --- auto-play when view opens? let user decide ---
+                // optionally, auto-play with a small delay
+                // setTimeout(() => { if (audio.paused) togglePlay(); }, 800);
+
+                // --- cleanup on view close ---
+                // handled in closeView
+            }
+
+            // --- update music UI (called from close) ---
+            function updateMusicUI() {
+                const playBtn = document.getElementById('musicPlay');
+                const vinyl = document.getElementById('vinylDisc');
+                if (playBtn) {
+                    playBtn.textContent = '▶';
+                    playBtn.classList.remove('playing');
+                }
+                if (vinyl) vinyl.classList.remove('spinning');
+                isMusicPlaying = false;
+            }
+
+            // --- format time ---
+            function formatTime(seconds) {
+                if (!seconds || isNaN(seconds) || seconds === Infinity) return '0:00';
+                const m = Math.floor(seconds / 60);
+                const s = Math.floor(seconds % 60);
+                return `${m}:${s.toString().padStart(2, '0')}`;
+            }
+
+            // --- Render Letter ---
+            function renderLetter() {
+                const container = document.getElementById('letterContainer');
+                const text = CONFIG.letterText || 'Surat ini masih kosong.';
+                const lines = text.split('\n').filter(line => line.trim() !== '' || line === '');
+
+                let html = `
+                    <div class="letter-paper">
+                        <div class="letter-text" id="letterText">
+                            ${lines.map((line, i) => `
+                                <span class="line" data-index="${i}" style="transition-delay: ${i * 0.08}s;">${line || '&nbsp;'}</span>
+                            `).join('')}
+                        </div>
+                        <div class="letter-signature">— Eryco | @Lokiiii —</div>
+                    </div>
+                `;
+                container.innerHTML = html;
+
+                // reset
+                letterLinesRevealed = 0;
+                if (letterTimer) {
+                    clearInterval(letterTimer);
+                    letterTimer = null;
+                }
+            }
+
+            // --- Start letter typing animation ---
+            function startLetterAnimation() {
+                const lines = document.querySelectorAll('#letterText .line');
+                if (!lines.length) return;
+
+                // reset all
+                lines.forEach(line => {
+                    line.classList.remove('visible', 'typing');
+                });
+
+                let index = 0;
+
+                function revealNext() {
+                    if (index >= lines.length) {
+                        // done
+                        if (letterTimer) {
+                            clearInterval(letterTimer);
+                            letterTimer = null;
+                        }
+                        // remove typing cursor from last line
+                        const last = lines[lines.length - 1];
+                        if (last) last.classList.remove('typing');
+                        return;
+                    }
+
+                    const line = lines[index];
+                    line.classList.add('visible');
+
+                    // add typing cursor to this line (remove from previous)
+                    if (index > 0) {
+                        const prev = lines[index - 1];
+                        if (prev) prev.classList.remove('typing');
+                    }
+                    line.classList.add('typing');
+
+                    index++;
+                }
+
+                // reveal first line immediately
+                revealNext();
+
+                // then reveal each subsequent line with a delay
+                letterTimer = setInterval(() => {
+                    revealNext();
+                }, 350);
+            }
+
+            // --- Render Secret ---
+            function renderSecret() {
+                const container = document.getElementById('secretContainer');
+                const isUnlocked = state.allVisited;
+                const secret = CONFIG.secret;
+
+                let drawerHtml = `
+                    <div class="secret-drawer ${isUnlocked ? 'unlocked' : 'locked'}">
+                        <div class="drawer-handle"></div>
+                        <span class="drawer-icon">${isUnlocked ? '🗄️' : '🔒'}</span>
+                        <div class="drawer-label">${isUnlocked ? 'Laci terbuka' : 'Laci terkunci'}</div>
+                        <div class="drawer-status">${isUnlocked ? '✓ telah dibuka' : 'jelajahi semua menu untuk membuka'}</div>
+                    </div>
+                `;
+
+                let revealHtml = '';
+                if (isUnlocked && secret) {
+                    const sType = secret.type || 'text';
+                    const sContent = secret.content || 'Tidak ada isi.';
+                    let mediaHtml = '';
+                    if (sType === 'image') {
+                        mediaHtml =
+                            `<div class="secret-media"><img src="${assetPath(sContent)}" alt="Rahasia" loading="lazy" /></div>`;
+                    } else if (sType === 'video') {
+                        mediaHtml =
+                            `<div class="secret-media"><video src="${assetPath(sContent)}" controls preload="metadata"></video></div>`;
+                    } else {
+                        mediaHtml = `<div class="secret-text">${sContent}</div>`;
+                    }
+                    revealHtml = `
+                        <div class="secret-reveal visible">
+                            ${mediaHtml}
+                        </div>
+                    `;
+                } else {
+                    revealHtml = `
+                        <div class="secret-reveal">
+                            <div class="secret-text" style="color:var(--color-text-muted);font-size:0.8rem;">
+                                🌙 <br />Kunjungi semua bagian terlebih dahulu.
+                            </div>
+                        </div>
+                    `;
+                }
+
+                container.innerHTML = drawerHtml + revealHtml;
+
+                // if unlocked, mark state
+                if (isUnlocked) {
+                    state.secretUnlocked = true;
+                }
+            }
+
+            // --- Open Media Modal ---
+            function openMediaModal(type, file, caption) {
+                const filePath = assetPath(file);
+                let mediaHtml = '';
+                if (type === 'video') {
+                    mediaHtml = `<video src="${filePath}" controls autoplay preload="metadata"></video>`;
+                } else {
+                    mediaHtml = `<img src="${filePath}" alt="${caption || 'Kenangan'}" loading="lazy" />`;
+                }
+
+                modalMedia.innerHTML = mediaHtml;
+                modalCaption.textContent = caption || '';
+
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+
+                // if video, auto-play
+                const video = modalMedia.querySelector('video');
+                if (video) {
+                    video.play().catch(() => {});
+                }
+            }
+
+            // --- Close Media Modal ---
+            function closeModal() {
+                modal.classList.remove('active');
+                document.body.style.overflow = '';
+                // pause any video
+                const video = modalMedia.querySelector('video');
+                if (video) {
+                    video.pause();
+                }
+                modalMedia.innerHTML = '';
+                modalCaption.textContent = '';
+            }
+
+            // --- modal close events ---
+            modalClose.addEventListener('click', closeModal);
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) closeModal();
+            });
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeModal();
+                    // also close view if open? no, let user use back button
+                }
+            });
+
+            // --- Keyboard shortcut: Escape to close view ---
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && currentView) {
+                    closeView(currentView);
+                }
+            });
+
+            // --- Initialize ---
+            function init() {
+                renderDesk();
+
+                // pre-render all views for faster switching (but keep hidden)
+                renderMemories();
+                renderTimeline();
+                renderMusic();
+                renderLetter();
+                renderSecret();
+
+                // Ensure desk is visible
+                deskView.classList.remove('hidden');
+                deskView.style.opacity = '1';
+                deskView.style.transform = 'scale(1)';
+
+                console.log('📦 Memoir initialized.');
+                console.log('📁 Media files should be placed in the "attach/" folder.');
+                console.log('✏️  Edit CONFIG at the top of the script to customize content.');
+            }
+
+            // --- Handle resize for responsive adjustments ---
+            window.addEventListener('resize', function() {
+                // nothing special needed
+            });
+
+            // --- Start ---
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+
+        })();
+    </script>
+
+</body>
+</html>
